@@ -1,12 +1,17 @@
 import downloadSvg from "data-base64:~assets/download.svg"
 import errorSvg from "data-base64:~assets/exclamation-point.svg"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
+import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
 import { VideApi } from "~api/video"
-import type { VideInfo, VideoInfoError } from "~types/video-info.type"
+import type {
+  VideInfoWitchQuality,
+  VideoInfoError
+} from "~types/video-info.type"
+import type { VideoLoadDTO } from "~types/video-load.dto.type"
 import { isError } from "~utils/is-error"
 
 import { Loader } from "./Loader"
@@ -16,27 +21,40 @@ interface Props {
   tabId: number
 }
 
+const videoLoad = async (body: VideoLoadDTO): Promise<null> => {
+  return await sendToBackground({
+    name: "videoLoad",
+    body
+  })
+}
+
 export const BtnLoad = ({ tabId }: Props) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+
   const ref = useRef(null)
 
-  const [videoInfo] = useStorage<VideInfo | VideoInfoError | null>({
+  const [videoInfo] = useStorage<VideInfoWitchQuality | VideoInfoError | null>({
     key: `${tabId}`,
     instance: new Storage({ area: "session" })
   })
 
-  const onloadClick = () => {
+  const onloadClick = async () => {
     if (isError(videoInfo)) {
       return
     }
+
+    setIsLoading(true)
 
     const {
       videoDetails: { title, videoId }
     } = videoInfo
 
-    VideApi.downloadExternal(videoId, title)
+    await videoLoad({ id: videoId, name: title })
+
+    setIsLoading(false)
   }
 
-  return !videoInfo ? (
+  return !videoInfo || isLoading ? (
     <div className="extension-video-download-wrapper">
       <div className="extension-video-download-loader-box">
         <Loader size={4} isLoading={true} />

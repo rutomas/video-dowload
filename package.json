@@ -37,7 +37,8 @@
       "scripting",
       "storage",
       "activeTab",
-      "tabs"
+      "tabs",
+      "downloads"
     ]
   }
 }

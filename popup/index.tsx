@@ -1,12 +1,18 @@
-import downloadSvg from "data-base64:~assets/download.svg"
-import { useEffect, useMemo, useState } from "react"
+import checkSvg from "data-base64:~assets/check.svg"
+import { useEffect, useState } from "react"
 
+import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
-import { VideApi } from "~api/video"
-import type { VideInfo, VideoInfoError } from "~types/video-info.type"
+import type { ItemQuality } from "~types/item-quality.type"
+import type {
+  VideInfoWitchQuality,
+  VideoInfoError
+} from "~types/video-info.type"
+import type { VideoLoadWitchParamsDTO } from "~types/video-load.dto.type"
 import { isError } from "~utils/is-error"
+import { Loader } from "~views/components/Loader"
 
 import indexModuleScss from "./index.module.scss"
 
@@ -20,26 +26,56 @@ const getTabId = async () => {
   return tab.id
 }
 
+export const loadVideo = async (
+  body: VideoLoadWitchParamsDTO
+): Promise<null> => {
+  return await sendToBackground({
+    name: "videoLoadWitchParams",
+    body
+  })
+}
+
 const VideoDownload = ({ tabId }: VideoDownloadProps) => {
-  const [videoInfo] = useStorage<VideInfo | VideoInfoError | null>({
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [loadItem, setLoadItem] = useState<ItemQuality>()
+
+  const [videoInfo] = useStorage<VideInfoWitchQuality | VideoInfoError | null>({
     key: `${tabId}`,
     instance: new Storage({ area: "session" })
   })
 
-  const error = useMemo(() => {
-    return isError(videoInfo)
+  useEffect(() => {
+    if (!videoInfo || isError(videoInfo)) {
+      return
+    }
+
+    setLoadItem(videoInfo.listOfVideoQuality[0])
   }, [videoInfo])
 
-  const onBtnDownloadClick = () => {
+  const onSelect = (value: ItemQuality) => {
+    setLoadItem(value)
+  }
+
+  const onBtnDownloadClick = async () => {
     if (isError(videoInfo)) {
       return
     }
 
+    setIsLoading(true)
+
     const {
-      videoDetails: { title, videoId }
+      videoDetails: { videoId, title }
     } = videoInfo
 
-    VideApi.downloadExternal(videoId, title)
+    const { itag, container, qualityLabel } = loadItem
+
+    await loadVideo({
+      id: videoId,
+      name: title,
+      param: { itag, container, qualityLabel }
+    })
+
+    setIsLoading(false)
   }
 
   return !videoInfo ? (
@@ -50,20 +86,80 @@ const VideoDownload = ({ tabId }: VideoDownloadProps) => {
     </p>
   ) : (
     <div className={indexModuleScss.videoDownload}>
-      <img
-        width={90}
-        height={50}
-        src={videoInfo.videoDetails.thumbnails[0].url}
-        alt="Thumbnails"
-      />
-      <span className={indexModuleScss.title}>
-        {videoInfo.videoDetails.title}
-      </span>
+      <div className={indexModuleScss.description}>
+        <img
+          width={90}
+          height={50}
+          src={videoInfo.videoDetails.thumbnails[0].url}
+          alt="Thumbnails"
+        />
+
+        <span className={indexModuleScss.title}>
+          {videoInfo.videoDetails.title}
+        </span>
+      </div>
+
+      {loadItem && (
+        <div className={indexModuleScss.loadOptions}>
+          <h3>Video</h3>
+
+          {videoInfo.listOfVideoQuality.map((item, index) => (
+            <div
+              onClick={() => onSelect(item)}
+              className={indexModuleScss.fileContainer}
+              key={index}>
+              <span>{item.container}</span>
+
+              <div className={indexModuleScss.info}>
+                <span>video quality: {item.qualityLabel}</span>
+                <span>audio bitrate: {item.audioBitrate}</span>
+              </div>
+
+              <div className={indexModuleScss.imageContainer}>
+                {loadItem.itag === item.itag && (
+                  <img width={20} height={20} src={checkSvg} alt="check" />
+                )}
+              </div>
+            </div>
+          ))}
+
+          <h3>Audio</h3>
+
+          {videoInfo.listOfAudioQuality.map((item, index) => (
+            <div
+              onClick={() => onSelect(item)}
+              className={indexModuleScss.fileContainer}
+              key={index}>
+              <span>{item.container}</span>
+
+              <div className={indexModuleScss.info}>
+                <span>audio bitrate: {item.audioBitrate}</span>
+              </div>
+
+              <div className={indexModuleScss.imageContainer}>
+                {loadItem.itag === item.itag && (
+                  <img width={20} height={20} src={checkSvg} alt="check" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <button
         onClick={onBtnDownloadClick}
         className={indexModuleScss.btnDownload}>
-        <img width={30} height={30} src={downloadSvg} alt="Download" />
+        {isLoading ? (
+          <div className={indexModuleScss.loaderContainer}>
+            <Loader
+              isLoading={true}
+              size={4.5}
+              className={indexModuleScss.loader}
+            />
+          </div>
+        ) : (
+          <span>Download</span>
+        )}
       </button>
     </div>
   )

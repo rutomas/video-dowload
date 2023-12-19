@@ -32,7 +32,7 @@ chrome.tabs.onUpdated.addListener(
 
       await storage.set(`${tabId}`, null)
 
-      const info = await VideApi.getInfo(videoId)
+      const info = await VideApi.getInfoWitchQuality(videoId)
 
       void storage.set(`${tabId}`, info)
     }
