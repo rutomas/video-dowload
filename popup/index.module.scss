@@ -1,0 +1,27 @@
+.videoDownload {
+  display: flex;
+  align-items: center;
+
+  column-gap: 10px;
+}
+
+.title {
+  font-size: 10px;
+  font-weight: 700;
+
+  width: 120px;
+
+  text-wrap: balance;
+
+  flex: 1;
+}
+
+.btnDownload {
+  display: inline-block;
+
+  background: none;
+  border: none;
+  outline: none;
+
+  cursor: pointer;
+}

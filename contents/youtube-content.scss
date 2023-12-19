@@ -1,0 +1,126 @@
+[id="plasmo-shadow-container"] {
+  padding: 0 5px;
+
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .extension-video-download-btn {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+
+    cursor: pointer;
+  }
+
+  .extension-video-download-wrapper {
+    box-sizing: border-box;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+  }
+
+  .extension-video-download-loader-box,
+  .extension-video-download-error {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #30cc6c;
+
+    width: 24px;
+    height: 24px;
+
+    border-radius: 6px;
+  }
+
+  .extension-video-download-loader {
+    --extensions-wisher-loader-color: #000000;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    width: 5em;
+    height: 5em;
+
+    div {
+      display: block;
+
+      position: absolute;
+
+      width: 4em;
+      height: 4em;
+
+      margin: 0.375em;
+
+      border: 0.375em solid var(--extensions-wisher-loader-color);
+      border-radius: 50%;
+
+      border-color: var(--extensions-wisher-loader-color) transparent
+        transparent transparent;
+
+      animation: extension-video-download-loader-animation 1.2s
+        cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+
+    div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+
+    div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+  }
+
+  .extension-video-download-loader-ripple {
+    --extensions-wisher-ripple-color: #1389fd;
+
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: var(--extensions-wisher-ripple-color);
+
+    transform: scale(0);
+
+    animation: extension-video-download-loader-ripple-animation 500ms ease-out;
+
+    pointer-events: none;
+  }
+}
+
+@keyframes extension-video-download-loader-ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes extension-video-download-loader-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
