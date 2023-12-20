@@ -1,5 +1,4 @@
-import checkSvg from "data-base64:~assets/check.svg"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
@@ -16,10 +15,6 @@ import { Loader } from "~views/components/Loader"
 
 import indexModuleScss from "./index.module.scss"
 
-interface VideoDownloadProps {
-  tabId: number
-}
-
 const getTabId = async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
@@ -35,7 +30,43 @@ export const loadVideo = async (
   })
 }
 
-const VideoDownload = ({ tabId }: VideoDownloadProps) => {
+const Select = ({ select }: { select: boolean }) => {
+  return (
+    <div is-select={select.toString()} className={indexModuleScss.select}></div>
+  )
+}
+
+const LoadItem = ({
+  items,
+  isVideo,
+  selectedItem,
+  onSelect
+}: {
+  items: ItemQuality[]
+  isVideo: boolean
+  selectedItem: ItemQuality
+  onSelect: (item: ItemQuality) => void
+}) => {
+  return items.map((item, index) => (
+    <div
+      onClick={() => onSelect(item)}
+      className={indexModuleScss.fileContainer}
+      key={index}>
+      <span>{item.container}</span>
+
+      <div className={indexModuleScss.info}>
+        {isVideo && <span>video quality: {item.qualityLabel}</span>}
+        <span>audio bitrate: {item.audioBitrate}</span>
+      </div>
+
+      <div className={indexModuleScss.imageContainer}>
+        <Select select={selectedItem.itag === item.itag} />
+      </div>
+    </div>
+  ))
+}
+
+const VideoDownload = ({ tabId }: { tabId: number }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [loadItem, setLoadItem] = useState<ItemQuality>()
 
@@ -44,13 +75,21 @@ const VideoDownload = ({ tabId }: VideoDownloadProps) => {
     instance: new Storage({ area: "session" })
   })
 
-  useEffect(() => {
+  const videoList = useMemo(() => {
     if (!videoInfo || isError(videoInfo)) {
+      return null
+    }
+
+    return videoInfo.listOfVideoQuality.sort((a, b) => b.itag - a.itag)
+  }, [videoInfo])
+
+  useEffect(() => {
+    if (videoList === null) {
       return
     }
 
-    setLoadItem(videoInfo.listOfVideoQuality[0])
-  }, [videoInfo])
+    setLoadItem(videoList[0])
+  }, [videoList])
 
   const onSelect = (value: ItemQuality) => {
     setLoadItem(value)
@@ -103,46 +142,21 @@ const VideoDownload = ({ tabId }: VideoDownloadProps) => {
         <div className={indexModuleScss.loadOptions}>
           <h3>Video</h3>
 
-          {videoInfo.listOfVideoQuality.map((item, index) => (
-            <div
-              onClick={() => onSelect(item)}
-              className={indexModuleScss.fileContainer}
-              key={index}>
-              <span>{item.container}</span>
-
-              <div className={indexModuleScss.info}>
-                <span>video quality: {item.qualityLabel}</span>
-                <span>audio bitrate: {item.audioBitrate}</span>
-              </div>
-
-              <div className={indexModuleScss.imageContainer}>
-                {loadItem.itag === item.itag && (
-                  <img width={20} height={20} src={checkSvg} alt="check" />
-                )}
-              </div>
-            </div>
-          ))}
+          <LoadItem
+            items={videoList}
+            isVideo={true}
+            selectedItem={loadItem}
+            onSelect={onSelect}
+          />
 
           <h3>Audio</h3>
 
-          {videoInfo.listOfAudioQuality.map((item, index) => (
-            <div
-              onClick={() => onSelect(item)}
-              className={indexModuleScss.fileContainer}
-              key={index}>
-              <span>{item.container}</span>
-
-              <div className={indexModuleScss.info}>
-                <span>audio bitrate: {item.audioBitrate}</span>
-              </div>
-
-              <div className={indexModuleScss.imageContainer}>
-                {loadItem.itag === item.itag && (
-                  <img width={20} height={20} src={checkSvg} alt="check" />
-                )}
-              </div>
-            </div>
-          ))}
+          <LoadItem
+            items={videoInfo.listOfAudioQuality}
+            isVideo={false}
+            selectedItem={loadItem}
+            onSelect={onSelect}
+          />
         </div>
       )}
 
