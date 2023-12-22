@@ -1,12 +1,11 @@
 import downloadSvg from "data-base64:~assets/download.svg"
 import errorSvg from "data-base64:~assets/exclamation-point.svg"
-import { useRef, useState } from "react"
+import { useState } from "react"
 
 import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
-import { VideApi } from "~api/video"
 import type {
   VideInfoWitchQuality,
   VideoInfoError
