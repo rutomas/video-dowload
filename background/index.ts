@@ -1,17 +1,10 @@
+import iconActive from "data-base64:~assets/icon-active.png"
+import iconDef from "data-base64:~assets/icon-def.png"
+
 import { Storage } from "@plasmohq/storage"
 
-import { VideApi } from "~api/video"
-import type { VideInfo } from "~types/video-info.type"
-
-// const inject = async (tabId: number) => {
-//   await chrome.scripting.executeScript({
-//     target: {
-//       tabId
-//     },
-//     world: "MAIN",
-//     func: YoutubeContent
-//   })
-// }
+import { getVideoInfo } from "./utils/get-video-info"
+import { setIcon } from "./utils/set-icon"
 
 const storage = new Storage({ area: "session" })
 
@@ -23,18 +16,22 @@ chrome.tabs.onUpdated.addListener(
 
     const url = new URL(tab.url)
 
-    if (
-      url.host === "www.youtube.com" &&
-      url.searchParams.has("v") &&
-      changeInfo?.status === "complete"
-    ) {
-      const videoId = url.searchParams.get("v")
+    if (url.host === "www.youtube.com" && changeInfo?.status === "complete") {
+      await setIcon(tabId, iconDef)
 
       await storage.set(`${tabId}`, null)
 
-      const info = await VideApi.getInfoWitchQuality(videoId)
+      if (url.searchParams.has("v")) {
+        const videoId = url.searchParams.get("v")
 
-      void storage.set(`${tabId}`, info)
+        const info = await getVideoInfo(videoId)
+
+        if ("videoDetails" in info) {
+          await setIcon(tabId, iconActive)
+        }
+
+        void storage.set(`${tabId}`, info)
+      }
     }
   }
 )

@@ -91,29 +91,6 @@
       animation-delay: -0.15s;
     }
   }
-
-  .extension-video-download-loader-ripple {
-    --extensions-wisher-ripple-color: #1389fd;
-
-    position: absolute;
-
-    border-radius: 50%;
-
-    background: var(--extensions-wisher-ripple-color);
-
-    transform: scale(0);
-
-    animation: extension-video-download-loader-ripple-animation 500ms ease-out;
-
-    pointer-events: none;
-  }
-}
-
-@keyframes extension-video-download-loader-ripple-animation {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
 }
 
 @keyframes extension-video-download-loader-animation {

@@ -15,7 +15,6 @@ import type { VideoLoadDTO } from "~types/video-load.dto.type"
 import { isError } from "~utils/is-error"
 
 import { Loader } from "./Loader"
-import { Ripple } from "./Ripple"
 
 interface Props {
   tabId: number
@@ -30,8 +29,6 @@ const videoLoad = async (body: VideoLoadDTO): Promise<null> => {
 
 export const BtnLoad = ({ tabId }: Props) => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
-
-  const ref = useRef(null)
 
   const [videoInfo] = useStorage<VideInfoWitchQuality | VideoInfoError | null>({
     key: `${tabId}`,
@@ -67,12 +64,8 @@ export const BtnLoad = ({ tabId }: Props) => {
       </div>
     </div>
   ) : (
-    <button
-      ref={ref}
-      onClick={onloadClick}
-      className="extension-video-download-btn">
+    <button onClick={onloadClick} className="extension-video-download-btn">
       <img width={30} height={30} src={downloadSvg} alt="Download" />
-      <Ripple host={ref} />
     </button>
   )
 }
