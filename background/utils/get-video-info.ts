@@ -6,7 +6,7 @@ export const getVideoInfo = async (videoId: string) => {
   try {
     interval = setInterval(() => {
       console.log("waiting response")
-    }, 10000)
+    }, 3000)
 
     const res = await VideApi.getInfoWitchQuality(videoId)
 
