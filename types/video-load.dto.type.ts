@@ -5,6 +5,6 @@ export interface VideoLoadDTO {
   readonly name: string
 }
 
-export interface VideoLoadWitchParamsDTO extends VideoLoadDTO {
+export interface VideoLoadWithParamsDTO extends VideoLoadDTO {
   readonly param: QualityParams
 }

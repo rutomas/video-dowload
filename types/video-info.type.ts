@@ -23,7 +23,7 @@ export interface VideInfo {
   readonly full: boolean
 }
 
-export interface VideInfoWitchQuality extends VideInfo {
+export interface VideInfoWithQuality extends VideInfo {
   readonly listOfVideoQuality: ItemQuality[]
   readonly listOfAudioQuality: ItemQuality[]
 }

@@ -16,6 +16,8 @@ const videoLoad: PlasmoMessaging.MessageHandler<VideoLoadDTO, null> = async (
 
   const url = `${VIDEO_DOWNLOAD_URL}/download?${params}`
 
+  console.log("videoLoad")
+
   await chrome.downloads.download({ url, saveAs: true, method: "GET" })
 
   return res.send(null)

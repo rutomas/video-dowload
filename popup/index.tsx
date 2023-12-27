@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { sendToBackground } from "@plasmohq/messaging"
-import { Storage } from "@plasmohq/storage"
-import { useStorage } from "@plasmohq/storage/hook"
-
+import { useVideoLoad } from "~hooks/video-load"
 import type { ItemQuality } from "~types/item-quality.type"
-import type {
-  VideInfoWitchQuality,
-  VideoInfoError
-} from "~types/video-info.type"
-import type { VideoLoadWitchParamsDTO } from "~types/video-load.dto.type"
+import type { VideInfoWithQuality } from "~types/video-info.type"
 import { isError } from "~utils/is-error"
 import { Loader } from "~views/components/Loader"
 
@@ -19,15 +12,6 @@ const getTabId = async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 
   return tab.id
-}
-
-export const loadVideo = async (
-  body: VideoLoadWitchParamsDTO
-): Promise<null> => {
-  return await sendToBackground({
-    name: "videoLoadWitchParams",
-    body
-  })
 }
 
 const Select = ({ select }: { select: boolean }) => {
@@ -67,21 +51,36 @@ const LoadItem = ({
 }
 
 const VideoDownload = ({ tabId }: { tabId: number }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [loadItem, setLoadItem] = useState<ItemQuality>()
+  const { isLoading, error, getVideoInfo, onLoadVideoWithParams } =
+    useVideoLoad(tabId)
 
-  const [videoInfo] = useStorage<VideInfoWitchQuality | VideoInfoError | null>({
-    key: `${tabId}`,
-    instance: new Storage({ area: "session" })
-  })
+  const [videoInfo, setVideoInfo] = useState<VideInfoWithQuality | null>(null)
+  const [loadItem, setLoadItem] = useState<ItemQuality>()
+  const [initialVideoData, setInitialVideoData] = useState(false)
 
   const videoList = useMemo(() => {
-    if (!videoInfo || isError(videoInfo)) {
+    if (videoInfo === null) {
       return null
     }
 
     return videoInfo.listOfVideoQuality.sort((a, b) => b.itag - a.itag)
   }, [videoInfo])
+
+  useEffect(() => {
+    setInitialVideoData(true)
+
+    void getVideoInfo().then((info) => {
+      if (isError(info)) {
+        setInitialVideoData(false)
+
+        return
+      }
+
+      setVideoInfo(info)
+
+      setInitialVideoData(false)
+    })
+  }, [])
 
   useEffect(() => {
     if (videoList === null) {
@@ -95,35 +94,13 @@ const VideoDownload = ({ tabId }: { tabId: number }) => {
     setLoadItem(value)
   }
 
-  const onBtnDownloadClick = async () => {
-    if (isError(videoInfo)) {
-      return
-    }
-
-    setIsLoading(true)
-
-    const {
-      videoDetails: { videoId, title }
-    } = videoInfo
-
-    const { itag, container, qualityLabel } = loadItem
-
-    await loadVideo({
-      id: videoId,
-      name: title,
-      param: { itag, container, qualityLabel }
-    })
-
-    setIsLoading(false)
-  }
-
-  return !videoInfo ? (
-    <p className={indexModuleScss.title}>Video not found</p>
-  ) : isError(videoInfo) ? (
+  return error ? (
     <p className={indexModuleScss.title}>
       For some reason we can't load this video
     </p>
-  ) : (
+  ) : initialVideoData ? (
+    <p className={indexModuleScss.title}> Loading video info ...</p>
+  ) : videoInfo !== null ? (
     <div className={indexModuleScss.videoDownload}>
       <div className={indexModuleScss.description}>
         <img
@@ -161,7 +138,9 @@ const VideoDownload = ({ tabId }: { tabId: number }) => {
       )}
 
       <button
-        onClick={onBtnDownloadClick}
+        onClick={() => {
+          onLoadVideoWithParams(loadItem)
+        }}
         className={indexModuleScss.btnDownload}>
         {isLoading ? (
           <div className={indexModuleScss.loaderContainer}>
@@ -176,6 +155,8 @@ const VideoDownload = ({ tabId }: { tabId: number }) => {
         )}
       </button>
     </div>
+  ) : (
+    <p className={indexModuleScss.title}>Video not found</p>
   )
 }
 

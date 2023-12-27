@@ -8,7 +8,7 @@ export const getVideoInfo = async (videoId: string) => {
       console.log("waiting response")
     }, 3000)
 
-    const res = await VideApi.getInfoWitchQuality(videoId)
+    const res = await VideApi.getInfoWithQuality(videoId)
 
     clearInterval(interval)
     interval = null

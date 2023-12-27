@@ -1,14 +1,14 @@
 import type {
-  VideInfoWitchQuality,
+  VideInfoWithQuality,
   VideoInfoError
 } from "~types/video-info.type"
 
 import { VIDEO_DOWNLOAD_URL } from "./const/video-download-href"
 
 export class VideApi {
-  static async getInfoWitchQuality(
+  static async getInfoWithQuality(
     id: string
-  ): Promise<VideInfoWitchQuality | VideoInfoError> {
+  ): Promise<VideInfoWithQuality | VideoInfoError> {
     const headers = {
       "Content-Type": "application/json"
     }

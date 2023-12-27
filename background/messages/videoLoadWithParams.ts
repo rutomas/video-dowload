@@ -1,10 +1,10 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 
 import { VIDEO_DOWNLOAD_URL } from "~api/const/video-download-href"
-import type { VideoLoadWitchParamsDTO } from "~types/video-load.dto.type"
+import type { VideoLoadWithParamsDTO } from "~types/video-load.dto.type"
 
 const loadVideoWithParams: PlasmoMessaging.MessageHandler<
-  VideoLoadWitchParamsDTO,
+  VideoLoadWithParamsDTO,
   null
 > = async (reg, res) => {
   const {
