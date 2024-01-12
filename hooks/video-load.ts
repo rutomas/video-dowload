@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { sendToBackground } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
+import { useStorage } from "@plasmohq/storage/hook"
 
 import type { ItemQuality } from "~types/item-quality.type"
 import type {
@@ -15,9 +16,21 @@ import type {
 import { isError } from "~utils/is-error"
 
 export const useVideoLoad = (tabId: number) => {
+  const [video] = useStorage({
+    key: `${tabId}`,
+    instance: new Storage({
+      area: "local"
+    })
+  })
+
   const [isLoading, setIsLoading] = useState(false)
 
   const [error, setError] = useState(false)
+
+  useEffect(() => {
+    setIsLoading(false)
+    setError(false)
+  }, [video])
 
   const getVideoId = (): Promise<string | null> => {
     return sendToBackground({
@@ -49,6 +62,8 @@ export const useVideoLoad = (tabId: number) => {
       return video
     }
 
+    await storage.set(`${tabId}`, null)
+
     const info = await sendToBackground({
       name: "videoInfo",
       body: { videoId }
@@ -56,7 +71,11 @@ export const useVideoLoad = (tabId: number) => {
 
     await storage.set(`${tabId}`, info)
 
-    return storage.get<VideInfoWithQuality | VideoInfoError>(`${tabId}`)
+    const data = await storage.get<VideInfoWithQuality | VideoInfoError>(
+      `${tabId}`
+    )
+
+    return data
   }
 
   const videoLoad = async (body: VideoLoadDTO): Promise<null> => {
@@ -86,6 +105,8 @@ export const useVideoLoad = (tabId: number) => {
 
     if (isError(info)) {
       setError(true)
+
+      setIsLoading(false)
 
       return
     }
